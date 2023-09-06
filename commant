@@ -1,0 +1,2 @@
+# cài đặt thư viện chứa hình ảnh
+pip install Pillow 
