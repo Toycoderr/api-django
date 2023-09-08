@@ -1,9 +1,14 @@
-from rest_framework import viewsets
-from authentication.models import CustomUser
-from .serializers import CustomUserSerializer
-from .permissions import CustomUserPermission
+from rest_framework import response, status
+from api_authentication.serializers import CustomUserSerializer
+from rest_framework.generics import GenericAPIView
 
-class CustomUserViewSet(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.all()
+class CustomUserAPIView(GenericAPIView):
     serializer_class = CustomUserSerializer
-    permission_classes = [CustomUserPermission]
+    
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return response.Response(serializer.data, status=status.HTTP_200_OK)
+        return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

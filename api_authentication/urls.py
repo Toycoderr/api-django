@@ -1,11 +1,6 @@
-from .views import CustomUserViewSet
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-
-router = DefaultRouter()
-router.register(r'users', CustomUserViewSet)
+from . import views
 
 urlpatterns = [
-    # Các URL patterns khác của ứng dụng của bạn
-    path('', include(router.urls)),
+    path('register', views.CustomUserAPIView.as_view(), name = 'register'),
 ]
