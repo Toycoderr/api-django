@@ -1,14 +1,69 @@
-from rest_framework import response, status
-from api_authentication.serializers import CustomUserSerializer
-from rest_framework.generics import GenericAPIView
+from rest_framework.views import APIView
+from .serializers import UserSerializer
+from rest_framework.response import Response
+from rest_framework.exceptions import AuthenticationFailed
+from authentication.models import CustomUser
+from django.conf import settings
+import jwt, datetime
 
-class CustomUserAPIView(GenericAPIView):
-    serializer_class = CustomUserSerializer
-    
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+class Register(APIView):
+    def post(self,request):
+        serializer = UserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
         
-        if serializer.is_valid():
-            serializer.save()
-            return response.Response(serializer.data, status=status.HTTP_200_OK)
-        return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class LoginView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+
+        user = CustomUser.objects.filter(email=email).first()
+
+        if user is None:
+            raise AuthenticationFailed('User not found!')
+
+        if not user.check_password(password):
+            raise AuthenticationFailed('Incorrect password!')
+
+        payload = {
+            'id': user.id,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+            'iat': datetime.datetime.utcnow()
+        }
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256').decode('utf-8')  # Use settings.SECRET_KEY here
+
+        return Response({
+            'jwt': token
+        })
+        
+class UserView(APIView):
+    def get(self, request):
+        token = request.COOKIES.get('jwt')
+
+        if not token:
+            raise AuthenticationFailed('No token provided!')
+
+        try:
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+            
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token has expired!')
+
+        user = CustomUser.objects.filter(id=payload['id']).first()
+
+        if user is None:
+            raise AuthenticationFailed('User not found!')
+
+        return Response({'message': 'Success', 'user_id': user.id})
+    
+class LogoutView(APIView):
+
+    def post(self, request):
+        response = Response()
+        # Xóa cookie chứa JWT token
+        response.delete_cookie('jwt')
+        response.data = {
+            'messange': 'success'
+        }
+        return response

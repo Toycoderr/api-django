@@ -13,6 +13,27 @@ Các lệnh git dùng trong bài:
 pip install coverage
 coverage run --omit='*/venv/*' manage.py test
 coverage html
+# token frame work django
+pip install pyjw
+
+# cookie
+pip install django-cors-headers 
+
+# token
+.models import jwt
+from django.conf import setting
+from datetime import datetime, timedelta
+
+
+  @property
+    def token(self):
+        payload = {
+            'username': self.username,
+            'email': self.email,
+            'exp': datetime.utcnow() + timedelta(hours=24)
+        }
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+        return token
 
 
 REACT
