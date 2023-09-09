@@ -20,3 +20,12 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance
+    
+class LoginSerializer(serializers.ModelSerializer):
+    
+    password = serializers.CharField(
+        max_length=128, min_length=6, write_only=True)
+    
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'email', 'token']

@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from .serializers import UserSerializer
+from .serializers import UserSerializer, LoginSerializer
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from authentication.models import CustomUser
@@ -14,6 +14,7 @@ class Register(APIView):
         return Response(serializer.data)
         
 class LoginView(APIView):
+
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
@@ -21,41 +22,28 @@ class LoginView(APIView):
         user = CustomUser.objects.filter(email=email).first()
 
         if user is None:
-            raise AuthenticationFailed('User not found!')
+            return Response({'detail': 'User not found!'}, status=status.HTTP_401_UNAUTHORIZED)
 
         if not user.check_password(password):
-            raise AuthenticationFailed('Incorrect password!')
+            return Response({'detail': 'Incorrect password!'}, status=status.HTTP_401_UNAUTHORIZED)
 
         payload = {
             'id': user.id,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
             'iat': datetime.datetime.utcnow()
         }
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256').decode('utf-8')  # Use settings.SECRET_KEY here
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256') 
 
-        return Response({
-            'jwt': token
-        })
+        response = Response({'email': email, 'message': 'Logged in successfully'})
+        response.set_cookie(key='jwt', value=token, httponly=True)  # Set cookie here
+
+        return response
         
 class UserView(APIView):
     def get(self, request):
         token = request.COOKIES.get('jwt')
 
-        if not token:
-            raise AuthenticationFailed('No token provided!')
-
-        try:
-            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
-            
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed('Token has expired!')
-
-        user = CustomUser.objects.filter(id=payload['id']).first()
-
-        if user is None:
-            raise AuthenticationFailed('User not found!')
-
-        return Response({'message': 'Success', 'user_id': user.id})
+        return Response({"jwt": token})
     
 class LogoutView(APIView):
 
