@@ -38,6 +38,8 @@ ALLOWED_HOSTS = []
 
 AUTH_USER_MODEL = 'authentication.CustomUser'
 
+OPENAI_API_KEY = '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'
+
 
 # Application definition
 
@@ -48,10 +50,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'chat_gpt',
     'corsheaders',
     'rest_framework',
     'authentication',
-    'blog',
+    
 ]
 
 MIDDLEWARE = [
@@ -62,6 +65,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Thêm middleware này
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -146,3 +151,29 @@ AUTH_USER_MODEL = 'authentication.CustomUser'
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Thay đổi thành địa chỉ gốc của ứng dụng frontend của bạn
+]
+
+# Cấu hình CORS cho WebSocket nếu bạn sử dụng Channels
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]

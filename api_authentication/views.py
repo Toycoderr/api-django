@@ -7,6 +7,7 @@ from django.conf import settings
 import jwt, datetime
 
 class Register(APIView):
+    
     def post(self,request):
         serializer = UserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -34,15 +35,16 @@ class LoginView(APIView):
         }
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256') 
 
-        response = Response({'email': email, 'message': 'Logged in successfully'})
+        response = Response({
+            'email': email, 'message': 'Logged in successfully'})
         response.set_cookie(key='jwt', value=token, httponly=True)  # Set cookie here
 
         return response
         
 class UserView(APIView):
+    
     def get(self, request):
         token = request.COOKIES.get('jwt')
-
         return Response({"jwt": token})
     
 class LogoutView(APIView):
